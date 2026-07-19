@@ -1,0 +1,84 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url('./fonts/figtree-variable.woff2') format('woff2');
+}
+
+@theme {
+  --color-brand: #108910;
+  --color-brand-dark: #0a6b0a;
+  --color-kale: #003d29;
+  --color-tint: #f2faf2;
+  --color-tint-line: #d8eed8;
+  --color-ink: #343538;
+  --color-sub: #72767e;
+  --color-line: #e8e9eb;
+  --color-field: #f6f7f8;
+  --font-sans: 'Figtree', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-white text-ink font-sans antialiased;
+}
+
+@keyframes rec-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rec-enter {
+  animation: rec-enter 200ms ease-out both;
+}
+
+@keyframes flash-fade {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.flash-fade {
+  animation: flash-fade 2s ease-out both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.toast-in {
+  animation: toast-in 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .rec-enter,
+  .toast-in {
+    animation-duration: 1ms;
+  }
+}
