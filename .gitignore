@@ -1,5 +1,5 @@
 node_modules
 dist
-raw-images/_candidates
+raw-images
 .DS_Store
 *.local

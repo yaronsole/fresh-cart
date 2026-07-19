@@ -14,7 +14,7 @@ export default function FilterPills() {
   const setFilter = useStore(s => s.setFilter)
 
   return (
-    <div className="flex gap-2 overflow-x-auto py-4">
+    <div className="no-scrollbar flex gap-2 overflow-x-auto py-4">
       {PILLS.map(({ tag, label }) => {
         const active = filter === tag && !search
         return (

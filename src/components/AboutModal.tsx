@@ -34,8 +34,8 @@ export default function AboutModal() {
             healthier pick — with a specific reason — for items where a clearly better option exists.
           </p>
           <p>
-            Most items won’t trigger anything. That restraint is deliberate: a suggestion only appears
-            when it’s genuinely worth your attention.
+            Most items won’t prompt a suggestion at all. That restraint is deliberate: one appears
+            only when a swap is genuinely worth your attention.
           </p>
           <p>
             This storefront shows one moment from a broader embedded-assistant strategy — the full
