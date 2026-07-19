@@ -15,6 +15,12 @@ export default function CartInsights() {
 
   const showSwap = (skuId: string) => {
     revealRec(skuId)
+    // if the card can no longer be delivered (item removed, rec dismissed
+    // since generation), regenerate instead of doing nothing
+    if (!useStore.getState().activeRecs.some(r => r.forSku === skuId)) {
+      generateInsights()
+      return
+    }
     setTimeout(() => {
       document
         .getElementById(`cart-line-${skuId}`)
@@ -64,7 +70,7 @@ export default function CartInsights() {
             {insights.map((insight, i) => (
               <div key={i}>
                 <p className="text-sm leading-snug">{insight.text}</p>
-                {insight.action && (
+                {insight.action && !stale && (
                   <button
                     onClick={() => showSwap(insight.action!.skuId)}
                     className="mt-1.5 h-7 rounded-full bg-brand px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-dark"

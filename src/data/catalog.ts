@@ -143,7 +143,7 @@ export const RECS: Rec[] = [
     pick: 'lime-sparkling-12pk',
     dimensions: ['Less sugar'],
     reason: 'All the fizz, none of the 39g of sugar per can — and it’s $2.50 less.',
-    payoff: 'That’s 39g of sugar off every can.',
+    payoff: 'Every can dropped 39g of sugar.',
   },
   {
     forSku: 'strawberry-yogurt-4pk',
@@ -202,14 +202,14 @@ export const RECS: Rec[] = [
     pick: 'uf-milk',
     dimensions: ['More protein'],
     reason: 'Five more grams of protein in every glass — 13g, up from 8 — and it still drinks exactly like 2%.',
-    payoff: 'Every glass pours 5g more protein now.',
+    payoff: '5g more protein in every glass from here on.',
   },
   {
     forSku: 'sour-cream',
     pick: 'greek-yogurt-tub',
     dimensions: ['More protein'],
     reason: 'Swaps one-for-one in tacos and dips, with six times the protein of sour cream in every scoop.',
-    payoff: 'Six times the protein, same scoop.',
+    payoff: 'Dips and tacos get six times the protein now.',
     contextVariants: [
       {
         ifInCart: 'tortilla-chips',
@@ -222,7 +222,7 @@ export const RECS: Rec[] = [
     pick: 'chicken-soup-ls',
     dimensions: ['Less sodium'],
     reason: 'The same soup you’ve been getting, with about half the salt — 410mg a can instead of 890.',
-    payoff: 'Same cozy soup, half the salt.',
+    payoff: 'Same cozy soup, 480mg of sodium lighter per can.',
   },
   {
     forSku: 'soy-sauce',
@@ -236,7 +236,7 @@ export const RECS: Rec[] = [
     pick: 'unsalted-nuts',
     dimensions: ['Less sodium'],
     reason: 'Same nuts, same roast — just without the 170mg of sodium per handful.',
-    payoff: 'That’s 170mg of sodium off every handful.',
+    payoff: 'Each handful skips 170mg of sodium.',
   },
   {
     forSku: 'marinara',

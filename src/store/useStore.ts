@@ -106,11 +106,11 @@ export const useStore = create<StoreState>((set, get) => {
       const { lines } = get()
       const existing = lines.find(l => l.skuId === skuId)
       if (existing) {
+        // qty-only changes never alter the analysis (it's per-serving), so it stays fresh
         set({
           lines: lines.map(l => (l.skuId === skuId ? { ...l, qty: l.qty + 1 } : l)),
           drawerOpen: true,
         })
-        touchInsights()
         return
       }
       set({ lines: [...lines, { skuId, qty: 1 }], drawerOpen: true })
@@ -124,7 +124,6 @@ export const useStore = create<StoreState>((set, get) => {
         return
       }
       set({ lines: get().lines.map(l => (l.skuId === skuId ? { ...l, qty } : l)) })
-      touchInsights()
     },
 
     removeItem: skuId => {

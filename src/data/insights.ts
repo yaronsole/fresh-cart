@@ -1,7 +1,7 @@
 // Cart insights — deterministic, invited-only analysis of the whole basket.
 // Same voice rules as the reason copy: lead with what's working, name real
-// items with real numbers, never moralize. Picks we suggested are never
-// criticized.
+// items with real numbers, never moralize, never claim more than the data
+// supports. Picks we suggested are never criticized.
 
 import { PICK_SKUS, REC_BY_SKU, SKU_BY_ID, type Sku } from './catalog'
 
@@ -82,10 +82,13 @@ interface BuildOpts {
   maxVisibleRecs: number
 }
 
-/** a chip is offered only when tapping it can actually show a card */
-function recAction(offenders: Sku[], opts: BuildOpts): InsightAction | undefined {
-  for (const sku of offenders) {
-    if (!REC_BY_SKU[sku.id]) continue
+/**
+ * A chip is offered only when tapping it can actually show a card, and only
+ * for items the surrounding sentence actually names — it must never surprise.
+ */
+function recAction(named: (Sku | undefined)[], opts: BuildOpts): InsightAction | undefined {
+  for (const sku of named) {
+    if (!sku || !REC_BY_SKU[sku.id]) continue
     if (opts.dismissed.includes(sku.id) || opts.swapped.includes(sku.id)) continue
     const alreadyVisible = opts.activeRecSkus.includes(sku.id)
     if (alreadyVisible || opts.activeRecSkus.length < opts.maxVisibleRecs) {
@@ -101,15 +104,17 @@ export function buildInsights(lineSkuIds: string[], opts: BuildOpts): Insight[] 
 
   const proteinSources = skus.filter(s => s.nutrition.protein >= 6).sort((a, b) => b.nutrition.protein - a.nutrition.protein)
   const produce = skus.filter(s => s.dept === 'Produce & Fresh')
-  // items that arrived via our own swap don't count as the shopper's find
+  // items that arrived via our own swap don't count as the shopper's find;
+  // "we'd have suggested" is only claimed for skus the swap cards really offer
   const swappedInPicks = new Set(opts.swapped.map(f => REC_BY_SKU[f].pick))
-  const healthy = skus.filter(s => s.tags.includes('healthier') && !swappedInPicks.has(s.id))
-  // whole produce is never a sugar "offender" — fruit sugar isn't added sugar
-  const flaggable = (s: Sku) => !PICK_SKUS.has(s.id) && s.dept !== 'Produce & Fresh' && !s.tags.includes('healthier')
-  const sugarHeavy = skus.filter(s => s.nutrition.sugar >= 15 && flaggable(s)).sort((a, b) => b.nutrition.sugar - a.nutrition.sugar)
-  const sodiumHeavy = skus.filter(s => s.nutrition.sodium >= 400 && flaggable(s)).sort((a, b) => b.nutrition.sodium - a.nutrition.sodium)
+  const ownFinds = skus.filter(s => PICK_SKUS.has(s.id) && !swappedInPicks.has(s.id))
 
-  // strength first — the invited surface is where the cart gets its credit
+  // whole produce is never a sugar offender — fruit sugar isn't added sugar
+  const improvable = (s: Sku) => !PICK_SKUS.has(s.id) && s.dept !== 'Produce & Fresh' && !s.tags.includes('healthier')
+  const sugarHeavy = skus.filter(s => s.nutrition.sugar >= 15 && improvable(s)).sort((a, b) => b.nutrition.sugar - a.nutrition.sugar)
+  const sodiumHeavy = skus.filter(s => s.nutrition.sodium >= 400 && improvable(s)).sort((a, b) => b.nutrition.sodium - a.nutrition.sodium)
+
+  // strength first — and the shopper's own choices get credit before ours
   if (proteinSources.length >= 2) {
     const [a, b] = proteinSources
     insights.push({
@@ -122,16 +127,17 @@ export function buildInsights(lineSkuIds: string[], opts: BuildOpts): Insight[] 
       kind: 'strength',
       text: `Nice fresh base — ${shortName(a)} and ${shortName(b)} anchor this cart.`,
     })
-  } else if (opts.swapped.length >= 1) {
-    insights.push({
-      kind: 'strength',
-      text: `The swap${opts.swapped.length > 1 ? 's' : ''} you made earlier ${opts.swapped.length > 1 ? 'are' : 'is'} already the strongest thing in here.`,
-    })
-  } else if (healthy.length >= 2) {
-    const [a, b] = healthy
+  } else if (ownFinds.length >= 2) {
+    const [a, b] = ownFinds
     insights.push({
       kind: 'strength',
       text: `${capitalize(shortName(a))} and ${shortName(b)} are exactly what we’d have suggested — you got there first.`,
+    })
+  } else if (opts.swapped.length >= 1) {
+    const lastRec = REC_BY_SKU[opts.swapped[opts.swapped.length - 1]]
+    insights.push({
+      kind: 'strength',
+      text: `Your ${opts.swapped.length > 1 ? 'latest swap' : 'earlier swap'} to ${shortName(SKU_BY_ID[lastRec.pick])} is still paying off: ${lastRec.payoff.toLowerCase()}`,
     })
   }
 
@@ -148,25 +154,37 @@ export function buildInsights(lineSkuIds: string[], opts: BuildOpts): Insight[] 
     insights.push({
       kind: 'improve',
       text: `Sugar’s the heavy end here — ${shortName(x)} at ${x.nutrition.sugar}g per serving${y ? `, ${shortName(y)} at ${y.nutrition.sugar}g` : ''}.`,
-      action: recAction(sugarHeavy, opts),
+      action: recAction([x, y], opts),
     })
   } else if (worst.count > 0 && worst.key === 'sodium') {
     const [x, y] = sodiumHeavy
     insights.push({
       kind: 'improve',
-      text: `Sodium’s where this cart runs hot — ${shortName(x)} at ${x.nutrition.sodium}mg a serving${y ? `, ${shortName(y)} close behind at ${y.nutrition.sodium}mg` : ''}.`,
-      action: recAction(sodiumHeavy, opts),
+      text: `Sodium’s where this cart runs hot — ${shortName(x)} at ${x.nutrition.sodium}mg a serving${y ? `, and ${shortName(y)} another ${y.nutrition.sodium}mg` : ''}.`,
+      action: recAction([x, y], opts),
     })
   } else if (worst.count > 0 && worst.key === 'protein-gap') {
     insights.push({
       kind: 'improve',
-      text: 'Not much protein on board yet — eggs, Greek yogurt, or the chicken breast would balance out the week.',
+      text: 'Not much protein on board yet — eggs, Greek yogurt, or chicken breast would round this cart out.',
     })
   } else {
-    insights.push({
-      kind: 'note',
-      text: 'Nothing here we’d change — honestly, this is the kind of cart we’d point other people to.',
-    })
+    // never say "nothing to change" while a swap card is (or could be) offering a change
+    const upgradable = skus.find(
+      s => REC_BY_SKU[s.id] && !opts.swapped.includes(s.id) && !opts.dismissed.includes(s.id),
+    )
+    if (upgradable) {
+      insights.push({
+        kind: 'improve',
+        text: `Nothing major here — though there’s an easy upgrade for ${shortName(upgradable)} if you want it.`,
+        action: recAction([upgradable], opts),
+      })
+    } else {
+      insights.push({
+        kind: 'note',
+        text: 'Nothing here we’d change — sugar, sodium, and protein all check out.',
+      })
+    }
   }
 
   return insights
