@@ -4,8 +4,9 @@ import { useStore } from '../store/useStore'
 const PILLS: { tag: FilterTag; label: string }[] = [
   { tag: 'featured', label: 'Featured' },
   { tag: 'healthier', label: 'Healthier' },
-  { tag: 'more-protein', label: 'More protein' },
-  { tag: 'less-sodium', label: 'Less sodium' },
+  { tag: 'high-protein', label: 'High protein' },
+  { tag: 'low-sugar', label: 'Low sugar' },
+  { tag: 'low-sodium', label: 'Low sodium' },
 ]
 
 export default function FilterPills() {

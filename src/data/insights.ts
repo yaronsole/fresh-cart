@@ -1,0 +1,175 @@
+// Cart insights — deterministic, invited-only analysis of the whole basket.
+// Same voice rules as the reason copy: lead with what's working, name real
+// items with real numbers, never moralize. Picks we suggested are never
+// criticized.
+
+import { PICK_SKUS, REC_BY_SKU, SKU_BY_ID, type Sku } from './catalog'
+
+export interface InsightAction {
+  label: string
+  /** trigger sku whose healthier pick the chip reveals */
+  skuId: string
+}
+
+export interface Insight {
+  kind: 'strength' | 'improve' | 'note'
+  text: string
+  action?: InsightAction
+}
+
+export const MIN_ITEMS_FOR_INSIGHTS = 4
+
+/** conversational handles for sentences; falls back to the full name */
+const SHORT_NAMES: Record<string, string> = {
+  'cola-12pk': 'the cola',
+  'orange-soda-2l': 'the orange soda',
+  'strawberry-yogurt-4pk': 'the strawberry yogurt',
+  'applesauce-sweetened': 'the sweetened applesauce',
+  'frosted-corn-flakes': 'the frosted flakes',
+  'granola-bars-choc': 'the granola bars',
+  'orange-juice': 'the orange juice',
+  'chicken-soup': 'the chicken noodle soup',
+  'soy-sauce': 'the soy sauce',
+  'marinara': 'the marinara',
+  'salted-nuts': 'the salted nuts',
+  'milk-2pct': 'the 2% milk',
+  'white-rice': 'the white rice',
+  'penne': 'the penne',
+  'sour-cream': 'the sour cream',
+  'chicken-breast': 'the chicken breast',
+  'eggs': 'the eggs',
+  'greek-yogurt-4pk': 'the Greek yogurt cups',
+  'greek-yogurt-tub': 'the Greek yogurt',
+  'chickpea-penne': 'the chickpea penne',
+  'uf-milk': 'the ultra-filtered milk',
+  'black-beans': 'the black beans',
+  'quinoa': 'the quinoa',
+  'bananas': 'the bananas',
+  'apples': 'the apples',
+  'spinach': 'the spinach',
+  'avocados': 'the avocados',
+  'baby-carrots': 'the baby carrots',
+  'cherry-tomatoes': 'the cherry tomatoes',
+  'wheat-bread': 'the whole-wheat bread',
+  'white-bread': 'the white bread',
+  'hummus': 'the hummus',
+  'lime-sparkling-12pk': 'the sparkling water',
+  'orange-sparkling-1l': 'the orange sparkling water',
+  'nut-bars-dark-choc': 'the nut bars',
+  'cheddar': 'the cheddar',
+  'soy-sauce-rs': 'the reduced-sodium soy sauce',
+  'chicken-soup-ls': 'the reduced-sodium soup',
+  'marinara-nsa': 'the no-salt marinara',
+  'applesauce-unsweetened': 'the unsweetened applesauce',
+  'oat-crunch-cereal': 'the oat-crunch cereal',
+  'rolled-oats': 'the oats',
+  'cold-brew': 'the cold brew',
+  'honey-os': 'the Honey O’s',
+  'cheddar-crackers': 'the cheddar crackers',
+  'dark-chocolate': 'the dark chocolate',
+  'tortilla-chips': 'the tortilla chips',
+  'unsalted-nuts': 'the unsalted nuts',
+  'olive-oil': 'the olive oil',
+  'butter': 'the butter',
+}
+
+const shortName = (sku: Sku) => SHORT_NAMES[sku.id] ?? sku.name
+
+interface BuildOpts {
+  dismissed: string[]
+  swapped: string[]
+  activeRecSkus: string[]
+  maxVisibleRecs: number
+}
+
+/** a chip is offered only when tapping it can actually show a card */
+function recAction(offenders: Sku[], opts: BuildOpts): InsightAction | undefined {
+  for (const sku of offenders) {
+    if (!REC_BY_SKU[sku.id]) continue
+    if (opts.dismissed.includes(sku.id) || opts.swapped.includes(sku.id)) continue
+    const alreadyVisible = opts.activeRecSkus.includes(sku.id)
+    if (alreadyVisible || opts.activeRecSkus.length < opts.maxVisibleRecs) {
+      return { label: 'Show a swap', skuId: sku.id }
+    }
+  }
+  return undefined
+}
+
+export function buildInsights(lineSkuIds: string[], opts: BuildOpts): Insight[] {
+  const skus = lineSkuIds.map(id => SKU_BY_ID[id])
+  const insights: Insight[] = []
+
+  const proteinSources = skus.filter(s => s.nutrition.protein >= 6).sort((a, b) => b.nutrition.protein - a.nutrition.protein)
+  const produce = skus.filter(s => s.dept === 'Produce & Fresh')
+  // items that arrived via our own swap don't count as the shopper's find
+  const swappedInPicks = new Set(opts.swapped.map(f => REC_BY_SKU[f].pick))
+  const healthy = skus.filter(s => s.tags.includes('healthier') && !swappedInPicks.has(s.id))
+  // whole produce is never a sugar "offender" — fruit sugar isn't added sugar
+  const flaggable = (s: Sku) => !PICK_SKUS.has(s.id) && s.dept !== 'Produce & Fresh' && !s.tags.includes('healthier')
+  const sugarHeavy = skus.filter(s => s.nutrition.sugar >= 15 && flaggable(s)).sort((a, b) => b.nutrition.sugar - a.nutrition.sugar)
+  const sodiumHeavy = skus.filter(s => s.nutrition.sodium >= 400 && flaggable(s)).sort((a, b) => b.nutrition.sodium - a.nutrition.sodium)
+
+  // strength first — the invited surface is where the cart gets its credit
+  if (proteinSources.length >= 2) {
+    const [a, b] = proteinSources
+    insights.push({
+      kind: 'strength',
+      text: `Good protein backbone — ${shortName(a)} (${a.nutrition.protein}g per serving) and ${shortName(b)} (${b.nutrition.protein}g) are carrying it.`,
+    })
+  } else if (produce.length >= 2) {
+    const [a, b] = produce
+    insights.push({
+      kind: 'strength',
+      text: `Nice fresh base — ${shortName(a)} and ${shortName(b)} anchor this cart.`,
+    })
+  } else if (opts.swapped.length >= 1) {
+    insights.push({
+      kind: 'strength',
+      text: `The swap${opts.swapped.length > 1 ? 's' : ''} you made earlier ${opts.swapped.length > 1 ? 'are' : 'is'} already the strongest thing in here.`,
+    })
+  } else if (healthy.length >= 2) {
+    const [a, b] = healthy
+    insights.push({
+      kind: 'strength',
+      text: `${capitalize(shortName(a))} and ${shortName(b)} are exactly what we’d have suggested — you got there first.`,
+    })
+  }
+
+  // one improvable dimension, most offenders wins; sugar breaks ties
+  const dims: { key: string; count: number }[] = [
+    { key: 'sugar', count: sugarHeavy.length },
+    { key: 'sodium', count: sodiumHeavy.length },
+    { key: 'protein-gap', count: proteinSources.length === 0 ? 1 : 0 },
+  ]
+  const worst = dims.sort((a, b) => b.count - a.count)[0]
+
+  if (worst.count > 0 && worst.key === 'sugar') {
+    const [x, y] = sugarHeavy
+    insights.push({
+      kind: 'improve',
+      text: `Sugar’s the heavy end here — ${shortName(x)} at ${x.nutrition.sugar}g per serving${y ? `, ${shortName(y)} at ${y.nutrition.sugar}g` : ''}.`,
+      action: recAction(sugarHeavy, opts),
+    })
+  } else if (worst.count > 0 && worst.key === 'sodium') {
+    const [x, y] = sodiumHeavy
+    insights.push({
+      kind: 'improve',
+      text: `Sodium’s where this cart runs hot — ${shortName(x)} at ${x.nutrition.sodium}mg a serving${y ? `, ${shortName(y)} close behind at ${y.nutrition.sodium}mg` : ''}.`,
+      action: recAction(sodiumHeavy, opts),
+    })
+  } else if (worst.count > 0 && worst.key === 'protein-gap') {
+    insights.push({
+      kind: 'improve',
+      text: 'Not much protein on board yet — eggs, Greek yogurt, or the chicken breast would balance out the week.',
+    })
+  } else {
+    insights.push({
+      kind: 'note',
+      text: 'Nothing here we’d change — honestly, this is the kind of cart we’d point other people to.',
+    })
+  }
+
+  return insights
+}
+
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)

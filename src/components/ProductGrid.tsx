@@ -5,8 +5,9 @@ import { deptSlug } from './Sidebar'
 
 const FILTER_HEADINGS: Record<Exclude<FilterTag, 'featured'>, string> = {
   healthier: 'Healthier picks around the store',
-  'more-protein': 'More protein',
-  'less-sodium': 'Less sodium',
+  'high-protein': 'High protein',
+  'low-sugar': 'Low sugar',
+  'low-sodium': 'Low sodium',
 }
 
 function Grid({ skus }: { skus: Sku[] }) {

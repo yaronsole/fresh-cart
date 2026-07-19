@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { formatPrice, productImage, SKU_BY_ID } from '../data/catalog'
 import { useCartCount, useStore, useSubtotal } from '../store/useStore'
+import CartInsights from './CartInsights'
 import HealthierPickCard from './HealthierPickCard'
 import { CartIcon, LogoGlyph, MinusIcon, PlusIcon, TrashIcon, XIcon } from './Icons'
 
@@ -105,11 +106,13 @@ export default function CartDrawer() {
               {lines.map(line => {
                 const rec = activeRecs.find(r => r.forSku === line.skuId)
                 return (
-                  <div key={line.skuId}>
+                  <div key={line.skuId} id={`cart-line-${line.skuId}`}>
                     <CartItemRow skuId={line.skuId} qty={line.qty} />
                     {rec && <HealthierPickCard forSku={rec.forSku} reason={rec.reason} />}
-                    {swappedFlash === line.skuId && (
-                      <div className="flash-fade mx-4 mb-3 text-sm font-semibold text-brand">Swapped ✦</div>
+                    {swappedFlash?.skuId === line.skuId && (
+                      <div className="flash-fade mx-4 mb-3 text-sm font-semibold text-brand">
+                        Swapped ✦ <span className="font-medium text-kale">{swappedFlash.text}</span>
+                      </div>
                     )}
                   </div>
                 )
@@ -117,6 +120,8 @@ export default function CartDrawer() {
             </div>
           )}
         </div>
+
+        {lines.length > 0 && <CartInsights />}
 
         {lines.length > 0 && (
           <div className="shrink-0 border-t border-line p-4">

@@ -38,7 +38,7 @@ export default function AboutModal() {
             only when a swap is genuinely worth your attention.
           </p>
           <p>
-            This storefront shows one moment from a broader embedded-assistant strategy — the full
+            This storefront shows a first slice of a broader embedded-assistant strategy — the full
             journey map is in the accompanying deck.
           </p>
           <p className="text-xs text-sub">
