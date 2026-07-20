@@ -80,6 +80,24 @@ body {
   display: none;
 }
 
+@keyframes sparkle-pop {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.4);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(1.15);
+  }
+}
+
+.sparkle {
+  animation: sparkle-pop 650ms ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -87,5 +105,8 @@ body {
   .rec-enter,
   .toast-in {
     animation-duration: 1ms;
+  }
+  .sparkle {
+    display: none;
   }
 }

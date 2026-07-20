@@ -3,7 +3,10 @@
 // items with real numbers, never moralize, never claim more than the data
 // supports. Picks we suggested are never criticized.
 
-import { PICK_SKUS, REC_BY_SKU, SKU_BY_ID, type Sku } from './catalog'
+import { PERSONA_NAME, PICK_SKUS, REC_BY_SKU, SKU_BY_ID, type Sku } from './catalog'
+
+/** lowercase a sentence's first letter so it can follow "Alex, …" or "Good call — …" */
+export const decap = (s: string) => (/^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s)
 
 export interface InsightAction {
   label: string
@@ -149,18 +152,23 @@ export function buildInsights(lineSkuIds: string[], opts: BuildOpts): Insight[] 
   ]
   const worst = dims.sort((a, b) => b.count - a.count)[0]
 
+  // when the offender is one of the shopper's weekly regulars, say so — the
+  // inference comes from order history, never from a stated preference
+  const regularNote = (x: Sku) =>
+    x.buyItAgain ? ' It’s a weekly regular for you, so a swap there pays off every week.' : ''
+
   if (worst.count > 0 && worst.key === 'sugar') {
     const [x, y] = sugarHeavy
     insights.push({
       kind: 'improve',
-      text: `Sugar’s the heavy end here — ${shortName(x)} at ${x.nutrition.sugar}g per serving${y ? `, ${shortName(y)} at ${y.nutrition.sugar}g` : ''}.`,
+      text: `Sugar’s the heavy end here — ${shortName(x)} at ${x.nutrition.sugar}g per serving${y ? `, ${shortName(y)} at ${y.nutrition.sugar}g` : ''}.${regularNote(x)}`,
       action: recAction([x, y], opts),
     })
   } else if (worst.count > 0 && worst.key === 'sodium') {
     const [x, y] = sodiumHeavy
     insights.push({
       kind: 'improve',
-      text: `Sodium’s where this cart runs hot — ${shortName(x)} at ${x.nutrition.sodium}mg a serving${y ? `, and ${shortName(y)} another ${y.nutrition.sodium}mg` : ''}.`,
+      text: `Sodium’s where this cart runs hot — ${shortName(x)} at ${x.nutrition.sodium}mg a serving${y ? `, and ${shortName(y)} another ${y.nutrition.sodium}mg` : ''}.${regularNote(x)}`,
       action: recAction([x, y], opts),
     })
   } else if (worst.count > 0 && worst.key === 'protein-gap') {
@@ -185,6 +193,11 @@ export function buildInsights(lineSkuIds: string[], opts: BuildOpts): Insight[] 
         text: 'Nothing here we’d change — sugar, sodium, and protein all check out.',
       })
     }
+  }
+
+  // the shopper is addressed by name exactly once, on the opening line
+  if (insights.length > 0) {
+    insights[0] = { ...insights[0], text: `${PERSONA_NAME}, ${decap(insights[0].text)}` }
   }
 
   return insights

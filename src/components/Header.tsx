@@ -1,3 +1,4 @@
+import { PERSONA_NAME } from '../data/catalog'
 import { useStore, useCartCount } from '../store/useStore'
 import { CartIcon, LogoGlyph, PinIcon, SearchIcon } from './Icons'
 
@@ -37,6 +38,13 @@ export default function Header() {
         <button className="hidden shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium hover:bg-field lg:flex">
           <PinIcon className="h-4 w-4 text-kale" />
           94110 · Fast delivery
+        </button>
+
+        <button className="hidden shrink-0 items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3 text-sm font-medium hover:bg-field md:flex">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-kale text-xs font-bold text-white">
+            {PERSONA_NAME.charAt(0)}
+          </span>
+          {PERSONA_NAME}
         </button>
 
         <button

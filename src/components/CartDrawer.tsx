@@ -1,14 +1,52 @@
 import { useEffect } from 'react'
-import { formatPrice, productImage, SKU_BY_ID } from '../data/catalog'
+import { formatPrice, productImage, REC_BY_SKU, SKU_BY_ID } from '../data/catalog'
 import { useCartCount, useStore, useSubtotal } from '../store/useStore'
 import CartInsights from './CartInsights'
 import HealthierPickCard from './HealthierPickCard'
 import { CartIcon, LogoGlyph, MinusIcon, PlusIcon, TrashIcon, XIcon } from './Icons'
 
+// ✦ burst when a swap lands — a handful of brand-green sparks, then gone
+const SPARKS: { dx: number; dy: number; size: number; delay: number; color: string }[] = [
+  { dx: -30, dy: -38, size: 13, delay: 0, color: '#108910' },
+  { dx: 8, dy: -50, size: 10, delay: 60, color: '#2ba82b' },
+  { dx: 34, dy: -32, size: 12, delay: 30, color: '#003d29' },
+  { dx: -48, dy: -14, size: 9, delay: 90, color: '#2ba82b' },
+  { dx: 52, dy: -10, size: 10, delay: 110, color: '#108910' },
+  { dx: -12, dy: -56, size: 8, delay: 40, color: '#003d29' },
+  { dx: 22, dy: -20, size: 9, delay: 130, color: '#108910' },
+]
+
+function SparkleBurst() {
+  return (
+    <span aria-hidden className="pointer-events-none absolute left-8 top-1">
+      {SPARKS.map((p, i) => (
+        <span
+          key={i}
+          className="sparkle absolute"
+          style={{
+            '--dx': `${p.dx}px`,
+            '--dy': `${p.dy}px`,
+            fontSize: p.size,
+            color: p.color,
+            animationDelay: `${p.delay}ms`,
+          } as React.CSSProperties}
+        >
+          ✦
+        </span>
+      ))}
+    </span>
+  )
+}
+
+/** rows that arrived via a swap keep a small ✦ for the session */
+const swappedInPick = (skuId: string, swapped: string[]) =>
+  swapped.some(forSku => REC_BY_SKU[forSku].pick === skuId)
+
 function CartItemRow({ skuId, qty }: { skuId: string; qty: number }) {
   const setQty = useStore(s => s.setQty)
   const addItem = useStore(s => s.addItem)
   const removeItem = useStore(s => s.removeItem)
+  const isSwapWin = useStore(s => swappedInPick(skuId, s.swapped))
   const sku = SKU_BY_ID[skuId]
 
   return (
@@ -19,7 +57,14 @@ function CartItemRow({ skuId, qty }: { skuId: string; qty: number }) {
         className="h-14 w-14 shrink-0 rounded-lg border border-line bg-white object-contain p-1"
       />
       <div className="min-w-0 flex-1">
-        <div className="line-clamp-2 text-sm font-medium leading-snug">{sku.name}</div>
+        <div className="line-clamp-2 text-sm font-medium leading-snug">
+          {sku.name}
+          {isSwapWin && (
+            <span aria-label="Swapped to a healthier pick" title="Swapped to a healthier pick" className="ml-1.5 text-xs text-brand">
+              ✦
+            </span>
+          )}
+        </div>
         <div className="mt-0.5 text-xs text-sub">{sku.unit}</div>
         <div className="mt-2 flex h-8 w-fit items-center rounded-full border border-line">
           <button
@@ -110,8 +155,9 @@ export default function CartDrawer() {
                     <CartItemRow skuId={line.skuId} qty={line.qty} />
                     {rec && <HealthierPickCard forSku={rec.forSku} reason={rec.reason} />}
                     {swappedFlash?.skuId === line.skuId && (
-                      <div className="flash-fade mx-4 mb-3 text-sm font-semibold text-brand">
-                        Swapped ✦ <span className="font-medium text-kale">{swappedFlash.text}</span>
+                      <div className="flash-fade relative mx-4 mb-3 text-sm font-semibold text-brand">
+                        <SparkleBurst />
+                        ✦ <span className="font-medium text-kale">{swappedFlash.text}</span>
                       </div>
                     )}
                   </div>

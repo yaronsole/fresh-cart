@@ -9,6 +9,9 @@ export type Department =
   | 'Pantry & Canned'
   | 'Produce & Fresh'
 
+/** the demo account everyone shops as — makes Buy-it-again and the history-aware copy legible */
+export const PERSONA_NAME = 'Alex'
+
 export const DEPARTMENTS: Department[] = [
   'Breakfast & Cereal',
   'Snacks',

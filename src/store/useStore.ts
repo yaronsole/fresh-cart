@@ -1,6 +1,10 @@
 import { create } from 'zustand'
-import { REC_BY_SKU, SKU_BY_ID, type FilterTag } from '../data/catalog'
-import { buildInsights, type Insight } from '../data/insights'
+import { PERSONA_NAME, REC_BY_SKU, SKU_BY_ID, type FilterTag } from '../data/catalog'
+import { buildInsights, decap, type Insight } from '../data/insights'
+
+/** first swap greets the shopper by name; later ones rotate short openers */
+const swapOpener = (nthSwap: number) =>
+  nthSwap === 1 ? `Nice trade, ${PERSONA_NAME} —` : ['Good call —', 'Done —', 'Another win —'][(nthSwap - 2) % 3]
 
 export interface Line {
   skuId: string
@@ -150,11 +154,12 @@ export const useStore = create<StoreState>((set, get) => {
       } else {
         lines = s.lines.map(l => (l.skuId === forSku ? { skuId: rec.pick, qty: l.qty } : l))
       }
+      const swapped = [...s.swapped, forSku]
       set({
         lines,
         activeRecs: s.activeRecs.filter(r => r.forSku !== forSku),
-        swapped: [...s.swapped, forSku],
-        swappedFlash: { skuId: rec.pick, text: rec.payoff },
+        swapped,
+        swappedFlash: { skuId: rec.pick, text: `${swapOpener(swapped.length)} ${decap(rec.payoff)}` },
       })
       touchInsights()
       clearTimeout(flashTimer)

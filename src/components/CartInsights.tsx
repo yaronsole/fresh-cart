@@ -36,7 +36,7 @@ export default function CartInsights() {
           className="flex h-10 w-full items-center justify-center gap-2 rounded-full border border-tint-line bg-tint text-sm font-semibold text-kale transition-colors hover:bg-[#e7f5e7]"
         >
           <span aria-hidden className="text-brand">✦</span>
-          Cart insights
+          How healthy is my cart?
         </button>
       )}
 

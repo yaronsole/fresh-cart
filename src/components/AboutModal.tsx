@@ -38,6 +38,10 @@ export default function AboutModal() {
             only when a swap is genuinely worth your attention.
           </p>
           <p>
+            You’re shopping as Alex — a demo account with an order history (that’s the “Buy it
+            again” row, and why the assistant sometimes references what Alex usually buys).
+          </p>
+          <p>
             This storefront shows a first slice of a broader embedded-assistant strategy — the full
             journey map is in the accompanying deck.
           </p>
