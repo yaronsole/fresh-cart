@@ -45,11 +45,18 @@ export default function AboutModal() {
             This storefront shows a first slice of a broader embedded-assistant strategy — the full
             journey map is in the accompanying deck.
           </p>
+          <p className="font-semibold">Add a few things to your cart and see what happens.</p>
           <p className="text-xs text-sub">
             Concept prototype by Yaron Sole. Not affiliated with Instacart, Inc. Product photography
             via Open Food Facts (CC BY-SA) and other open sources.
           </p>
         </div>
+        <button
+          onClick={() => setAboutOpen(false)}
+          className="mt-4 h-11 w-full rounded-full bg-brand font-semibold text-white transition-colors hover:bg-brand-dark"
+        >
+          Start shopping
+        </button>
       </div>
     </div>
   )

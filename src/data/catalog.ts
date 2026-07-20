@@ -138,14 +138,14 @@ export const RECS: Rec[] = [
     forSku: 'frosted-corn-flakes',
     pick: 'oat-crunch-cereal',
     dimensions: ['Less sugar'],
-    reason: 'Same crunch, 9g less sugar per bowl — and it’s 30¢ cheaper.',
+    reason: 'Same crunch as your usual, 9g less sugar per bowl — and it’s 30¢ cheaper.',
     payoff: 'That’s 9g of sugar off every bowl.',
   },
   {
     forSku: 'cola-12pk',
     pick: 'lime-sparkling-12pk',
     dimensions: ['Less sugar'],
-    reason: 'All the fizz, none of the 39g of sugar per can — and it’s $2.50 less.',
+    reason: 'You grab these most weeks — all the fizz, none of the 39g of sugar per can, and it’s $2.50 less.',
     payoff: 'Every can dropped 39g of sugar.',
   },
   {
@@ -180,7 +180,7 @@ export const RECS: Rec[] = [
     forSku: 'penne',
     pick: 'chickpea-penne',
     dimensions: ['More protein'],
-    reason: '13g of protein per serving instead of 6 — under sauce you honestly can’t tell.',
+    reason: 'The penne you always get, upgraded: 13g of protein per serving instead of 6 — under sauce you honestly can’t tell.',
     payoff: 'Dinner just picked up 7g of protein per serving.',
     contextVariants: [
       {

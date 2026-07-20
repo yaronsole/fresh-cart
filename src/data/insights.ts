@@ -144,40 +144,53 @@ export function buildInsights(lineSkuIds: string[], opts: BuildOpts): Insight[] 
     })
   }
 
-  // one improvable dimension, most offenders wins; sugar breaks ties
-  const dims: { key: string; count: number }[] = [
-    { key: 'sugar', count: sugarHeavy.length },
-    { key: 'sodium', count: sodiumHeavy.length },
-    { key: 'protein-gap', count: proteinSources.length === 0 ? 1 : 0 },
-  ]
-  const worst = dims.sort((a, b) => b.count - a.count)[0]
-
   // when the offender is one of the shopper's weekly regulars, say so — the
   // inference comes from order history, never from a stated preference
   const regularNote = (x: Sku) =>
-    x.buyItAgain ? ' It’s a weekly regular for you, so a swap there pays off every week.' : ''
+    x.buyItAgain ? ' It’s in your cart most weeks — a swap there pays off every week.' : ''
 
-  if (worst.count > 0 && worst.key === 'sugar') {
+  // biggest single source first, said the way a person would say it
+  if (sugarHeavy.length > 0 && sugarHeavy.length >= sodiumHeavy.length) {
     const [x, y] = sugarHeavy
     insights.push({
       kind: 'improve',
-      text: `Sugar’s the heavy end here — ${shortName(x)} at ${x.nutrition.sugar}g per serving${y ? `, ${shortName(y)} at ${y.nutrition.sugar}g` : ''}.${regularNote(x)}`,
+      text: y
+        ? `Most of the sugar here is ${shortName(x)} (${x.nutrition.sugar}g per serving) and ${shortName(y)} (${y.nutrition.sugar}g).${regularNote(x)}`
+        : `Most of the sugar here is ${shortName(x)} — ${x.nutrition.sugar}g per serving.${regularNote(x)}`,
       action: recAction([x, y], opts),
     })
-  } else if (worst.count > 0 && worst.key === 'sodium') {
+  } else if (sodiumHeavy.length > 0) {
     const [x, y] = sodiumHeavy
     insights.push({
       kind: 'improve',
-      text: `Sodium’s where this cart runs hot — ${shortName(x)} at ${x.nutrition.sodium}mg a serving${y ? `, and ${shortName(y)} another ${y.nutrition.sodium}mg` : ''}.${regularNote(x)}`,
+      text: `Most of the sodium is ${shortName(x)} — ${x.nutrition.sodium}mg a serving${y ? ` (${shortName(y)} adds ${y.nutrition.sodium}mg more)` : ''}.${regularNote(x)}`,
       action: recAction([x, y], opts),
     })
-  } else if (worst.count > 0 && worst.key === 'protein-gap') {
+  }
+
+  // what's missing matters as much as what's heavy
+  const noProtein = proteinSources.length === 0
+  const noProduce = produce.length === 0
+  if (noProtein && noProduce) {
     insights.push({
       kind: 'improve',
-      text: 'Not much protein on board yet — eggs, Greek yogurt, or chicken breast would round this cart out.',
+      text: 'Also: no protein and nothing fresh in here yet — eggs or Greek yogurt for one, bananas or spinach for the other.',
     })
-  } else {
-    // never say "nothing to change" while a swap card is (or could be) offering a change
+  } else if (noProtein) {
+    insights.push({
+      kind: 'improve',
+      text: 'One gap: protein. Eggs, Greek yogurt, or chicken breast would cover it.',
+    })
+  } else if (noProduce) {
+    insights.push({
+      kind: 'improve',
+      text: 'One gap: nothing fresh in here. Bananas, spinach, or a couple of avocados would fix that.',
+    })
+  }
+
+  // nothing heavy, nothing missing — but never say "nothing to change"
+  // while a swap card is (or could be) offering a change
+  if (!insights.some(i => i.kind === 'improve')) {
     const upgradable = skus.find(
       s => REC_BY_SKU[s.id] && !opts.swapped.includes(s.id) && !opts.dismissed.includes(s.id),
     )

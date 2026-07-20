@@ -46,7 +46,7 @@ body {
 
 @keyframes flash-fade {
   0%,
-  70% {
+  82% {
     opacity: 1;
   }
   100% {
@@ -55,7 +55,7 @@ body {
 }
 
 .flash-fade {
-  animation: flash-fade 2.6s ease-out both;
+  animation: flash-fade 4s ease-out both;
 }
 
 @keyframes toast-in {

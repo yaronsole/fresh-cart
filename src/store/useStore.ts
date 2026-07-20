@@ -62,7 +62,8 @@ const initialState = {
   search: '',
   checkoutToast: false,
   swappedFlash: null as { skuId: string; text: string } | null,
-  aboutOpen: false,
+  // the About note doubles as the welcome — open on first load
+  aboutOpen: true,
   insightsStatus: 'idle' as const,
   insights: [] as Insight[],
   insightsStale: false,
@@ -163,7 +164,7 @@ export const useStore = create<StoreState>((set, get) => {
       })
       touchInsights()
       clearTimeout(flashTimer)
-      flashTimer = setTimeout(() => set({ swappedFlash: null }), 2700)
+      flashTimer = setTimeout(() => set({ swappedFlash: null }), 4100)
     },
 
     dismissRec: forSku => {
