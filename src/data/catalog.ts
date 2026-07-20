@@ -145,14 +145,14 @@ export const RECS: Rec[] = [
     forSku: 'cola-12pk',
     pick: 'lime-sparkling-12pk',
     dimensions: ['Less sugar'],
-    reason: 'You grab these most weeks — all the fizz, none of the 39g of sugar per can, and it’s $2.50 less.',
+    reason: 'You buy that cola most weeks — this one keeps the fizz, drops all 39g of sugar per can, and costs $2.50 less.',
     payoff: 'Every can dropped 39g of sugar.',
   },
   {
     forSku: 'strawberry-yogurt-4pk',
     pick: 'greek-yogurt-4pk',
     dimensions: ['Less sugar', 'More protein'],
-    reason: 'You get these most weeks — the Greek ones have 3× the protein and a third of the sugar.',
+    reason: 'The strawberry ones are in your cart most weeks — these have 3× the protein and a third of the sugar.',
     payoff: 'Triple the protein, a third of the sugar.',
   },
   {
